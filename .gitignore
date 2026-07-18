@@ -1,13 +1,5 @@
-# Secrets — NEVER commit
 .env
-
-# Database file — created automatically on first run
-database/socialwatch.db
-
-# Python junk
+*.db
 __pycache__/
-*.pyc
-
-# Virtual environment
+.idea/
 venv/
-.venv/
