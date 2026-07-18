@@ -1,4 +1,5 @@
 # --- Social Watch dependencies ---
+requests==2.33.0
 streamlit==1.54.0        # the dashboard (our screen)
 anthropic==0.39.0        # talks to Claude (the AI brain)
 requests==2.33.0         # talks to any website (X route, Slack, ClickUp)
