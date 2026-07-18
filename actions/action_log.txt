@@ -1,0 +1,22 @@
+[2026-07-18T17:41:08.143866+00:00] SLACK: 🟠 HIGH delivery_delay | Score 72 | Deleted my Zomato gold account
+[2026-07-18T17:41:08.144297+00:00] JIRA: New ticket MOCK-15 | Priority: High | Category: delivery_delay | Title: Deleted my Zomato gold account
+[2026-07-18T17:41:08.515318+00:00] Post #12: MODERATE (Score: 56) - No action taken
+[2026-07-18T17:41:08.838002+00:00] Post #11: MODERATE (Score: 48) - No action taken
+[2026-07-18T17:41:09.261620+00:00] SLACK: 🔴 CRITICAL food_quality | Score 100 | Zomato customer service is non-existent
+[2026-07-18T17:41:09.261858+00:00] JIRA: New ticket MOCK-6 | Priority: Highest | Category: food_quality | Title: Zomato customer service is non-existent
+[2026-07-18T17:41:09.262031+00:00] EMAIL: Alert sent to support-manager@zomato.com | Subject: CRITICAL POST - Zomato customer service is non-existent
+[2026-07-18T17:41:09.609755+00:00] SLACK: 🔴 CRITICAL delivery_delay | Score 100 | Why I deleted Zomato - latest delivery experience was the la
+[2026-07-18T17:41:09.610180+00:00] JIRA: New ticket MOCK-5 | Priority: Highest | Category: delivery_delay | Title: Why I deleted Zomato - latest delivery experience was the la
+[2026-07-18T17:41:09.610419+00:00] EMAIL: Alert sent to support-manager@zomato.com | Subject: CRITICAL POST - Why I deleted Zomato - latest delivery experience 
+[2026-07-18T17:41:09.932194+00:00] SLACK: 🔴 CRITICAL delivery_delay | Score 100 | Cold food delivered - is this normal for Zomato?
+[2026-07-18T17:41:09.932451+00:00] JIRA: New ticket MOCK-4 | Priority: Highest | Category: delivery_delay | Title: Cold food delivered - is this normal for Zomato?
+[2026-07-18T17:41:09.932619+00:00] EMAIL: Alert sent to support-manager@zomato.com | Subject: CRITICAL POST - Cold food delivered - is this normal for Zomato?
+[2026-07-18T17:41:10.415951+00:00] SLACK: 🔴 CRITICAL delivery_delay | Score 100 | Order never delivered - Zomato refund rejected
+[2026-07-18T17:41:10.416252+00:00] JIRA: New ticket MOCK-3 | Priority: Highest | Category: delivery_delay | Title: Order never delivered - Zomato refund rejected
+[2026-07-18T17:41:10.416437+00:00] EMAIL: Alert sent to support-manager@zomato.com | Subject: CRITICAL POST - Order never delivered - Zomato refund rejected
+[2026-07-18T17:41:10.838111+00:00] SLACK: 🔴 CRITICAL delivery_delay | Score 100 | Zomato delivery took 2 hours for a 5km distance - unacceptab
+[2026-07-18T17:41:10.838342+00:00] JIRA: New ticket MOCK-2 | Priority: Highest | Category: delivery_delay | Title: Zomato delivery took 2 hours for a 5km distance - unacceptab
+[2026-07-18T17:41:10.838501+00:00] EMAIL: Alert sent to support-manager@zomato.com | Subject: CRITICAL POST - Zomato delivery took 2 hours for a 5km distance - 
+[2026-07-18T17:41:11.285838+00:00] SLACK: 🔴 CRITICAL delivery_delay | Score 100 | Test post — my order never arrived
+[2026-07-18T17:41:11.286168+00:00] JIRA: New ticket MOCK-1 | Priority: Highest | Category: delivery_delay | Title: Test post — my order never arrived
+[2026-07-18T17:41:11.286393+00:00] EMAIL: Alert sent to support-manager@zomato.com | Subject: CRITICAL POST - Test post — my order never arrived
