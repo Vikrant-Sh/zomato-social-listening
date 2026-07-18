@@ -1,32 +1,34 @@
 """
-collectors/reddit.py — Module 3: fetch live Reddit posts mentioning Zomato.
+collectors/reddit.py — Module 3: fetch recent posts from r/zomato.
 
 HOW IT WORKS (plain English):
-  1. Make a web request to Reddit's public API (no login needed).
-  2. Reddit sends back JSON: a list of the newest/hottest posts.
-  3. We walk through each post and "normalize" it — rename Reddit's fields
+  1. Download the subreddit's public RSS feed (no login needed).
+  2. Parse the feed and keep its ten newest entries.
+  3. We walk through each entry and "normalize" it — rename RSS fields
      to match our standard format (source, source_post_id, title, body, etc).
   4. For each post, call save_post() from the database module.
      save_post() says "new post!" or "already have it" (dedupe).
-  5. Report back: "fetched 15 posts, saved 12 new ones, 3 were duplicates."
+  5. Report how many posts were new and how many were duplicates.
 
-Why public endpoints and not PRAW?
-  - Reddit's app approval takes days. Public JSON endpoints work NOW.
-  - A subreddit's /hot.json or /new.json is public — no credentials needed.
-  - requests (which we already have) is all we need.
+Why RSS and not PRAW?
+  - The public RSS feed does not require Reddit API credentials.
+  - The project already depends on feedparser.
+  - Ten scheduled runs spread through a day stay below the observed RSS limit.
 
 What posts do we get?
-  - Newest or hottest from subreddits: r/india, r/FoodDelivery, r/zomato, etc.
-  - We search the title & body for keywords ("Zomato", "late delivery", etc).
-  
+  - The ten newest entries from r/zomato.
+  - RSS does not include upvote or comment counts, so those values are zero.
+
 If Reddit blocks us, we use mock posts to keep testing the pipeline.
 """
 
-import requests
 from datetime import datetime, timezone
-from typing import List, Dict, Tuple
-import sys
 from pathlib import Path
+import sys
+from typing import Dict, List, Tuple
+
+import feedparser
+import requests
 
 # So this module can import from database/
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -36,25 +38,12 @@ from database.db import save_post, update_source_status
 # ---------------------------------------------------------------- config
 
 REDDIT_SUBREDDITS = [
-    "india",
-    "FoodDelivery",
     "zomato",
-    "indiafood",
-]
-
-# These keywords mean a post is probably about Zomato or food delivery problems
-KEYWORDS = [
-    "zomato",
-    "delivery",
-    "late",
-    "cold food",
-    "not delivered",
-    "order",
-    "missing",
-    "refund",
 ]
 
 REDDIT_API_TIMEOUT = 10  # seconds
+MAX_POSTS_PER_SUBREDDIT = 10
+REDDIT_USER_AGENT = "macos:zomato-social-watch:v1.0.0 (RSS collector)"
 
 
 # ---------------------------------------------------------------- fetching
@@ -70,30 +59,25 @@ def fetch_posts_from_reddit() -> Tuple[List[Dict], List[str]]:
 
     for subreddit in REDDIT_SUBREDDITS:
         try:
-            url = f"https://www.reddit.com/r/{subreddit}/hot.json"
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-            }
-            params = {"limit": 50}  # fetch 50 posts per subreddit
-
+            url = f"https://www.reddit.com/r/{subreddit}/new/.rss"
             response = requests.get(
-                url, headers=headers, params=params, timeout=REDDIT_API_TIMEOUT
+                url,
+                headers={"User-Agent": REDDIT_USER_AGENT},
+                timeout=REDDIT_API_TIMEOUT,
             )
-            response.raise_for_status()  # raise an error if 404 or 500
+            response.raise_for_status()
 
-            data = response.json()
-            posts = data.get("data", {}).get("children", [])
+            feed = feedparser.parse(response.content)
+            if feed.bozo and not feed.entries:
+                raise ValueError(f"invalid RSS feed: {feed.bozo_exception}")
 
-            for post_wrapper in posts:
-                post = post_wrapper.get("data", {})
-                normalized = normalize_reddit_post(post)
-                if normalized:
-                    all_posts.append(normalized)
+            for entry in feed.entries[:MAX_POSTS_PER_SUBREDDIT]:
+                all_posts.append(normalize_reddit_post(entry))
 
         except requests.exceptions.RequestException as e:
             errors.append(f"{subreddit}: {str(e)}")
-        except Exception as e:
-            errors.append(f"{subreddit}: unexpected error {type(e).__name__}")
+        except (TypeError, ValueError) as e:
+            errors.append(f"{subreddit}: {str(e)}")
 
     return all_posts, errors
 
@@ -104,36 +88,25 @@ def normalize_reddit_post(reddit_post: Dict) -> Dict:
     """
     Convert a Reddit post's fields into our standard format.
 
-    Reddit gives us: id, title, selftext, author, ups, num_comments, url, created_utc
+    RSS gives us:    id, title, summary, author, link, published_parsed
     We want:         source, source_post_id, title, body, author, upvotes, comments, url, posted_at
-
-    Also: only return posts that mention Zomato or delivery issues.
     """
-    title = reddit_post.get("title", "").lower()
-    body = reddit_post.get("selftext", "").lower()
-    combined_text = f"{title} {body}"
-
-    # Only keep posts that match our keywords
-    if not any(keyword in combined_text for keyword in KEYWORDS):
-        return None  # skip this post, not relevant
-
-    # Convert Reddit's Unix timestamp to ISO format
-    created_utc = reddit_post.get("created_utc")
-    if created_utc:
-        posted_at = datetime.fromtimestamp(created_utc, tz=timezone.utc).isoformat()
+    published = reddit_post.get("published_parsed")
+    if published:
+        posted_at = datetime(*published[:6], tzinfo=timezone.utc).isoformat()
     else:
         posted_at = datetime.now(timezone.utc).isoformat()
 
     normalized = {
         "source": "reddit",
-        "source_post_id": reddit_post.get("id", ""),
+        "source_post_id": reddit_post.get("id", reddit_post.get("link", "")),
         "author": reddit_post.get("author", "Unknown"),
         "title": reddit_post.get("title", ""),
-        "body": reddit_post.get("selftext", ""),
-        "url": f"https://reddit.com{reddit_post.get('permalink', '')}",
+        "body": reddit_post.get("summary", ""),
+        "url": reddit_post.get("link", ""),
         "posted_at": posted_at,
-        "upvotes": reddit_post.get("ups", 0),
-        "comments": reddit_post.get("num_comments", 0),
+        "upvotes": 0,
+        "comments": 0,
     }
 
     return normalized
@@ -248,9 +221,9 @@ def collect_and_save():
 # ---------------------------------------------------------------- self-test
 
 if __name__ == "__main__":
-    print("🔍 Module 3 self-test: fetching live Reddit posts...")
+    print("🔍 Module 3 self-test: fetching live Reddit RSS posts...")
     print(f"   Subreddits: {', '.join(REDDIT_SUBREDDITS)}")
-    print(f"   Keywords: {', '.join(KEYWORDS)}")
+    print(f"   Latest posts per subreddit: {MAX_POSTS_PER_SUBREDDIT}")
     print(f"   (If Reddit is blocked, mock posts will be used for testing)\n")
 
     new, dups, errors, used_mock = collect_and_save()
