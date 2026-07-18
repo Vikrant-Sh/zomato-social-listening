@@ -1,9 +1,8 @@
 # --- Social Watch dependencies ---
-requests==2.33.0
-streamlit==1.54.0        # the dashboard (our screen)
-anthropic==0.39.0        # talks to Claude (the AI brain)
-requests==2.33.0         # talks to any website (X route, Slack, ClickUp)
-feedparser==6.0.11       # reads RSS news feeds
+streamlit==1.59.2        # the dashboard (our screen)
+anthropic==0.117.0        # talks to Claude (the AI brain)
+requests==2.34.2         # talks to any website (X route, Slack, ClickUp)
+feedparser==6.0.12       # reads RSS news feeds
 vaderSentiment==3.3.2    # free sentiment checker (part of the noise filter)
-APScheduler==3.10.4      # the alarm clock (runs the pipeline every 5 min)
+APScheduler==3.11.3      # the alarm clock (runs the pipeline every 5 min)
 python-dotenv==1.2.2     # reads secrets from the .env pocket
